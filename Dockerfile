@@ -1,7 +1,24 @@
-FROM debian:bookworm-slim as installer
+FROM mcr.microsoft.com/devcontainers/base:jammy as installer
 
 ARG DYALOG_RELEASE=19.0
 ARG BUILDTYPE=minimal
+ARG USERNAME=dyalog
+ARG USER_UID=1010
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash -d /home/dyalog \
+    #
+    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# ********************************************************
+# * Anything else you want to do like clean up goes here *
+# ********************************************************
 
 RUN apt-get update && apt-get install -y curl && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
@@ -13,7 +30,7 @@ ADD rmfiles.sh /
 
 RUN dpkg -i --ignore-depends=libtinfo5 /tmp/dyalog.deb && /rmfiles.sh
 
-FROM debian:bookworm-slim
+FROM mcr.microsoft.com/devcontainers/base:jammy
 
 ARG DYALOG_RELEASE=19.0
 
@@ -38,16 +55,16 @@ RUN cp /opt/mdyalog/${DYALOG_RELEASE}/64/unicode/LICENSE /LICENSE
 ADD entrypoint /
 RUN sed -i "s/{{DYALOG_RELEASE}}/${DYALOG_RELEASE}/" /entrypoint
 
-RUN useradd -s /bin/bash -d /home/dyalog -m dyalog
 RUN mkdir /app /storage && \
     chmod 777 /app /storage
 
 LABEL org.label-schema.licence="proprietary / non-commercial"   \   
       org.label-schema.licenceURL="https://www.dyalog.com/uploads/documents/Private_Personal_Educational_Licence.pdf"
 
-EXPOSE 4502
+#EXPOSE 4502
+ENV RIDE_INIT=http:*:8899
 
-USER dyalog
+USER $USERNAME
 WORKDIR /home/dyalog
 VOLUME [ "/storage", "/app" ]
 ENTRYPOINT ["/entrypoint"]

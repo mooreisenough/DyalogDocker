@@ -1,0 +1,56 @@
+{
+    "build": {
+        // Path is relative to the devcontainer.json file.
+        "dockerfile": "../Dockerfile",
+        "context": ".."
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "installJupyterlab": true, 
+            "installTools": true
+
+        },
+        "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+            "packages": "make,gcc,g++"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "forwardPorts": [
+        8888,
+        8899
+    ],
+    "portsAttributes": {
+        "8888": {
+            "label": "jupyter"
+        },
+        "8899": {
+            "label": "ride"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "DavidAnson.vscode-markdownlint",
+                "eamodio.gitlens@11.7.0",
+                "editorconfig.editorconfig",
+                "mhutchie.git-graph",
+                "ms-python.python",
+                "ms-python.black-formatter",
+                "timonwong.shellcheck",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.autopep8",
+                "tamasfe.even-better-toml"
+            ]
+        }
+    },
+    "postStartCommand": {},
+    "postAttachCommand": {
+        "setup jupyter": [
+            "bash",
+            "-i",
+            "-c",
+            "source ./.devcontainer/setup.sh"
+        ]
+    }
+}
